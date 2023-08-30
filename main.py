@@ -100,10 +100,7 @@ async def user(interaction: discord.Interaction):
         await interaction.followup.send("권한이 없습니다", ephemeral=True)
         return
 
-    view_select = discord.ui.View()
-    view_select.add_item(views.RegisterUser())
-
-    await interaction.response.send_message(content="사용자를 선택하세요", view=view_select, ephemeral=True)
+    await interaction.response.send_message(content="사용자를 선택하세요", view=views.RegisterUser(), ephemeral=True)
 
 
 client.run(os.getenv('TOKEN'))
