@@ -14,12 +14,17 @@ load_dotenv()
 class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
+        self.bank = None
+        self.account_num = None
+        self.holder = None
         self.tree = app_commands.CommandTree(self)
+        self.read_database()
 
+    def read_database(self):
         try:
-            with open(ACCOUNT_INFO_DATABASE, 'r+') as file:
+            with open(ACCOUNT_INFO_DATABASE, 'r+', encoding='utf-8') as file:
                 text = file.read()
-        except:
+        except FileNotFoundError:
             text = ""
         if len(text) < 10:
             text = "None\nNone\nNone"
@@ -37,12 +42,12 @@ client = MyClient()
 
 @client.tree.command(guild=TEST_GUILD, description="청구서 날리기")
 async def bill(interaction: discord.Interaction, cost: int):
-    await interaction.response.defer()
-
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.followup.send("권한이 없습니다", ephemeral=True)
+        await interaction.response.send_message("권한이 없습니다", ephemeral=True)
         return
+
+    await interaction.response.defer()
 
     members = interaction.guild.get_role(MEMBER_ROLE).members
     # await interaction.guild.get_channel(TOTAL_CHANNEL).edit(name=f"KRW {cost}")
@@ -50,6 +55,7 @@ async def bill(interaction: discord.Interaction, cost: int):
     # await interaction.guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원 '{len(members)}'명")
     await asyncio.sleep(1)
     # await interaction.guild.get_channel(BILL_CHANNEL).edit(name=f"KRW {round(cost / len(members), 1)}/명")
+    await asyncio.sleep(1)
 
     for member in members:
         try:
@@ -59,8 +65,8 @@ async def bill(interaction: discord.Interaction, cost: int):
             print("HTTP Error", e)
         except AttributeError as e:
             print("Attribute Error", e)
+        await asyncio.sleep(1)
 
-    await asyncio.sleep(1)
     await interaction.followup.send("**전송 완료**")
 
 
@@ -73,7 +79,6 @@ async def manager(interaction: discord.Interaction, member: discord.Member):
 
     await interaction.response.defer()
     await interaction.user.remove_roles(manager_role)
-    await asyncio.sleep(1)
     await member.add_roles(manager_role)
     await interaction.followup.send(f"<@{member.id}>는 이제 관리자 입니다", ephemeral=True)
 
@@ -85,7 +90,7 @@ async def bank(interaction: discord.Interaction):
         await interaction.response.send_message("권한이 없습니다", ephemeral=True)
         return
 
-    await interaction.response.send_modal(modals.Bank())
+    await interaction.response.send_modal(modals.Bank(client))
 
 
 @client.tree.command(guild=TEST_GUILD, description="사용자 설정")
