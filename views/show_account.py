@@ -5,7 +5,7 @@ from .bill_letter import BillLetter
 
 class ShowAccount(discord.ui.View):
     def __init__(self, client):
-        super().__init__()
+        super().__init__(timeout=None)
         self.client = client
 
     @discord.ui.button(label="입금 계좌", custom_id='acc_info', style=discord.ButtonStyle.gray)

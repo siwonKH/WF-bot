@@ -8,7 +8,7 @@ from config import TOTAL_CHANNEL, MEMBER_ROLE, TEST_GUILD_ID
 
 class BillLetter(discord.ui.View):
     def __init__(self, client):
-        super().__init__()
+        super().__init__(timeout=None)
         self.client = client
 
     @discord.ui.button(label="확인하기", custom_id='bill_open', style=discord.ButtonStyle.blurple)
