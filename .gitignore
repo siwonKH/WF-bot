@@ -1,5 +1,5 @@
 venv
 .env
-acc
+acc.txt
 main-temp.py
 config.py
