@@ -1,0 +1,5 @@
+venv
+.env
+acc
+main-temp.py
+config.py
