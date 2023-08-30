@@ -5,6 +5,9 @@ from config import ACCOUNT_INFO_DATABASE
 
 
 class Bank(discord.ui.Modal, title='표시할 은행 입력'):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
 
     account_number = discord.ui.TextInput(
         label='입금 계좌',
@@ -24,8 +27,9 @@ class Bank(discord.ui.Modal, title='표시할 은행 입력'):
     )
 
     async def on_submit(self, interaction: discord.Interaction):
-        with open(ACCOUNT_INFO_DATABASE, 'a+') as file:
+        with open(ACCOUNT_INFO_DATABASE, 'a+', encoding='utf-8') as file:
             file.write(f"{self.account_number}\n{self.bank_name}\n{self.account_holder}")
+        self.client.read_database()
 
         await interaction.response.send_message('은행정보가 저장되었습니다', ephemeral=True)
 
