@@ -42,7 +42,7 @@ class MyClient(discord.Client):
 client = MyClient()
 
 
-@tasks.loop(seconds=301)
+@tasks.loop(seconds=5)
 async def edit_channels():
     if not client.need_channel_edit:
         return
@@ -54,6 +54,7 @@ async def edit_channels():
     await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"{format(client.cost, ',')}원")
     await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원: {len(members)}")
     await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"{format(round(client.cost / len(members), 1), ',')}원/명")
+    await asyncio.sleep(300)
 
 
 @client.tree.command(guild=TEST_GUILD, description="지연 시간")
