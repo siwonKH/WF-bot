@@ -1,5 +1,7 @@
 import os
 import asyncio
+from datetime import datetime
+
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -7,7 +9,7 @@ from dotenv import load_dotenv
 
 import views
 import modals
-from config import TEST_GUILD, MANAGER_ROLE, MEMBER_ROLE, TEST_GUILD_ID, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL
+from config import TEST_GUILD, MANAGER_ROLE, MEMBER_ROLE, TEST_GUILD_ID, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL, MONTH_CHANNEL
 
 load_dotenv()
 
@@ -15,7 +17,8 @@ load_dotenv()
 class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
-        self.cost = None
+        self.cost: int = 0
+        self.date: datetime = datetime.now()
         self.acc_bank = None
         self.acc_num = None
         self.acc_holder = None
@@ -30,6 +33,9 @@ class MyClient(discord.Client):
 
     async def setup_hook(self) -> None:
         await self.tree.sync(guild=TEST_GUILD)
+        self.add_view(views.RegisterUser())
+        self.add_view(views.BillLetter(client))
+        self.add_view(views.ShowAccount(client))
 
 
 client = MyClient()
@@ -43,9 +49,10 @@ async def edit_channels():
     client.need_channel_edit = False
 
     members = client.test_guild.get_role(MEMBER_ROLE).members
-    await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"KRW {format(client.cost, ',')}")
-    await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원 '{len(members)}'명")
-    await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"KRW {format(round(client.cost / len(members), 1), ',')}/명")
+    await client.test_guild.get_channel(MONTH_CHANNEL).edit(name=f"ChatGPT Plus [{client.date.month}월]")
+    await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"{format(client.cost, ',')}원")
+    await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원: {len(members)}")
+    await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"{format(round(client.cost / len(members), 1), ',')}원/명")
 
 
 @client.tree.command(guild=TEST_GUILD, description="청구서 날리기")
@@ -57,9 +64,13 @@ async def bill(interaction: discord.Interaction, cost: int):
     if client.acc_num is None:
         await interaction.response.send_message("/bank 명령어를 먼저 사용해주세요", ephemeral=True)
         return
+    if cost < 1:
+        await interaction.response.send_message("올바른 금액을 입력하세요", ephemeral=True)
+        return
 
     await interaction.response.defer()
     client.cost = cost
+    client.date = datetime.now()
     client.need_channel_edit = True
 
     members = interaction.guild.get_role(MEMBER_ROLE).members
