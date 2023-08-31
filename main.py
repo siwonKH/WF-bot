@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 
 import views
 import modals
-from config import TEST_GUILD, MANAGER_ROLE, MEMBER_ROLE, TEST_GUILD_ID, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL, MONTH_CHANNEL
+from config import TEST_GUILD_ID, MANAGER_ROLE, MEMBER_ROLE, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL, MONTH_CHANNEL
 
+TEST_GUILD = discord.Object(TEST_GUILD_ID)
 load_dotenv()
 
 
