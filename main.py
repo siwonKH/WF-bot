@@ -1,12 +1,13 @@
 import os
 import asyncio
-
-from dotenv import load_dotenv
+import discord
 from discord import app_commands
+from discord.ext import tasks
+from dotenv import load_dotenv
 
 import views
 import modals
-from config import *
+from config import TEST_GUILD, MANAGER_ROLE, MEMBER_ROLE, TEST_GUILD_ID, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL
 
 load_dotenv()
 
@@ -14,13 +15,18 @@ load_dotenv()
 class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
+        self.cost = None
         self.acc_bank = None
         self.acc_num = None
         self.acc_holder = None
+        self.test_guild = None
+        self.need_channel_edit = False
         self.tree = app_commands.CommandTree(self)
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
+        self.test_guild = self.get_guild(TEST_GUILD_ID)
+        edit_channels.start()
 
     async def setup_hook(self) -> None:
         await self.tree.sync(guild=TEST_GUILD)
@@ -29,23 +35,34 @@ class MyClient(discord.Client):
 client = MyClient()
 
 
+@tasks.loop(seconds=301)
+async def edit_channels():
+    if not client.need_channel_edit:
+        return
+    print("editing channels")
+    client.need_channel_edit = False
+
+    members = client.test_guild.get_role(MEMBER_ROLE).members
+    await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"KRW {format(client.cost, ',')}")
+    await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원 '{len(members)}'명")
+    await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"KRW {format(round(client.cost / len(members), 1), ',')}/명")
+
+
 @client.tree.command(guild=TEST_GUILD, description="청구서 날리기")
 async def bill(interaction: discord.Interaction, cost: int):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.response.send_message(content="권한이 없습니다", ephemeral=True)
+        await interaction.response.send_message("권한이 없습니다", ephemeral=True)
+        return
+    if client.acc_num is None:
+        await interaction.response.send_message("/bank 명령어를 먼저 사용해주세요", ephemeral=True)
         return
 
     await interaction.response.defer()
+    client.cost = cost
+    client.need_channel_edit = True
 
     members = interaction.guild.get_role(MEMBER_ROLE).members
-    # await interaction.guild.get_channel(TOTAL_CHANNEL).edit(name=f"KRW {cost}")
-    await asyncio.sleep(1)
-    # await interaction.guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원 '{len(members)}'명")
-    await asyncio.sleep(1)
-    # await interaction.guild.get_channel(BILL_CHANNEL).edit(name=f"KRW {round(cost / len(members), 1)}/명")
-    await asyncio.sleep(1)
-
     for member in members:
         try:
             print("Sending DM to:", member)
@@ -59,27 +76,27 @@ async def bill(interaction: discord.Interaction, cost: int):
             print("Attribute Error", e)
         await asyncio.sleep(1)
 
-    await interaction.followup.send(content="**전송 완료**")
+    await interaction.followup.send("**전송 완료**")
 
 
 @client.tree.command(guild=TEST_GUILD, description="관리자 설정")
 async def manager(interaction: discord.Interaction, member: discord.Member):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.response.send_message(content="권한이 없습니다", ephemeral=True)
+        await interaction.response.send_message("권한이 없습니다", ephemeral=True)
         return
 
     await interaction.response.defer()
     await interaction.user.remove_roles(manager_role)
     await member.add_roles(manager_role)
-    await interaction.followup.send(content=f"<@{member.id}>는 이제 관리자 입니다", ephemeral=True)
+    await interaction.followup.send(f"<@{member.id}>는 이제 관리자 입니다")
 
 
 @client.tree.command(guild=TEST_GUILD, description="관리자 계좌 설정")
 async def bank(interaction: discord.Interaction):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.response.send_message(content="권한이 없습니다", ephemeral=True)
+        await interaction.response.send_message("권한이 없습니다", ephemeral=True)
         return
 
     await interaction.response.send_modal(modals.Bank(client))
@@ -89,7 +106,7 @@ async def bank(interaction: discord.Interaction):
 async def user(interaction: discord.Interaction):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.followup.send(content="권한이 없습니다", ephemeral=True)
+        await interaction.followup.send("권한이 없습니다", ephemeral=True)
         return
 
     await interaction.response.send_message(
