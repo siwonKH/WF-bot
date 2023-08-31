@@ -2,7 +2,6 @@ import discord
 
 import views
 import embeds
-
 from config import TOTAL_CHANNEL, MEMBER_ROLE, TEST_GUILD_ID
 
 
