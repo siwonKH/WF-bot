@@ -118,7 +118,7 @@ async def bank(interaction: discord.Interaction):
 async def user(interaction: discord.Interaction):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
     if manager_role not in interaction.user.roles:
-        await interaction.followup.send("권한이 없습니다", ephemeral=True)
+        await interaction.response.send_message("권한이 없습니다", ephemeral=True)
         return
 
     await interaction.response.send_message(
