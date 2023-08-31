@@ -60,6 +60,6 @@ class ShowAccount(discord.ui.View):
         member_role = self.client.test_guild.get_role(MEMBER_ROLE)
         await interaction.response.edit_message(
             content="",
-            embed=embeds.get_billing_embed(cost, len(member_role.members), self.client.date),
+            embed=embeds.get_billing_embed(cost, len(member_role.members), self.client.date, refresh=True),
             view=views.ShowAccount(self.client)
         )

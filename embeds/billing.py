@@ -1,16 +1,18 @@
 import discord
+from random import randint
 from datetime import datetime
 
 
-def get_billing_embed(cost: int, member_cnt: int, date: datetime):
+def get_billing_embed(cost: int, member_cnt: int, date: datetime, refresh: bool = False):
     subtotal = format(cost, ',')
     discount = str(format(round(cost / member_cnt * (member_cnt - 1) * -1, 1), ','))
     total = str(format(round(cost / member_cnt, 1), ','))
+    color = randint(0, 0xffffff) if refresh else 0x00b0f4
 
     embed = discord.Embed(
         title=f"ChatGPT Plus [{date.month}월]",
         description=f"이번 달 요금: KRW {total}",
-        colour=0x00b0f4,
+        color=color,
         timestamp=date
     )
     embed.add_field(
