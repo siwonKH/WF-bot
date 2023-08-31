@@ -34,7 +34,7 @@ class RegisterUser(discord.ui.View):
             if member in members_to_add:
                 member_string += f"- {member.name} (+)\n"
             elif member in members_to_remove:
-                member_string += f"- {member.name} (-)\n"
+                member_string += f"- ~~{member.name}~~\n"
             else:
                 member_string += f"- {member.name}\n"
 
