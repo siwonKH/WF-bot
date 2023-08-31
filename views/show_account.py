@@ -11,14 +11,14 @@ class ShowAccount(discord.ui.View):
     @discord.ui.button(label="입금 계좌", custom_id="acc_info", style=discord.ButtonStyle.gray)
     async def show_acc_btn(self, interaction: discord.Interaction, button_obj: discord.ui.Button):
         await interaction.response.send_message(
-            content=f"{self.client.bank} {self.client.account_num}\n{self.client.holder}",
+            content=f"{self.client.acc_bank} {self.client.acc_num}\n{self.client.acc_holder}",
             ephemeral=True
         )
 
     @discord.ui.button(label="계좌 복사", custom_id="acc_num", style=discord.ButtonStyle.gray)
     async def show_acc_num_btn(self, interaction: discord.Interaction, button_obj: discord.ui.Button):
         await interaction.response.send_message(
-            content=f"{self.client.account_num}",
+            content=f"{self.client.acc_num}",
             ephemeral=True
         )
 
