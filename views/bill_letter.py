@@ -11,7 +11,7 @@ class BillLetter(discord.ui.View):
         super().__init__(timeout=None)
         self.client = client
 
-    @discord.ui.button(label="확인하기", custom_id='bill_open', style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="확인하기", custom_id="bill_open", style=discord.ButtonStyle.blurple)
     async def show_btn(self, interaction: discord.Interaction, button_obj: discord.ui.Button):
         test_guild = self.client.get_guild(TEST_GUILD_ID)
         member_count = len(test_guild.get_role(MEMBER_ROLE).members)

@@ -11,7 +11,7 @@ class RegisterUser(discord.ui.View):
     async def user_select(self, interaction: discord.Interaction):
         manager_role = interaction.guild.get_role(MANAGER_ROLE)
         if manager_role not in interaction.user.roles:
-            await interaction.response.send_message("권한이 없습니다", ephemeral=True)
+            await interaction.response.send_message(content="권한이 없습니다", ephemeral=True)
             return
 
         await interaction.response.defer()
@@ -26,4 +26,4 @@ class RegisterUser(discord.ui.View):
             await member.add_roles(member_role)
             member_string += f"- {member.name}\n"
 
-        await interaction.followup.send(f"**설정 인원**\n{member_string}")
+        await interaction.followup.send(content=f"**설정 인원**\n{member_string}")
