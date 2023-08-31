@@ -14,21 +14,10 @@ load_dotenv()
 class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
-        self.bank = None
-        self.account_num = None
-        self.holder = None
+        self.acc_bank = None
+        self.acc_num = None
+        self.acc_holder = None
         self.tree = app_commands.CommandTree(self)
-        self.read_database()
-
-    def read_database(self):
-        try:
-            with open(ACCOUNT_INFO_DATABASE, 'r+', encoding='utf-8') as file:
-                text = file.read()
-        except FileNotFoundError:
-            text = ""
-        if len(text) < 10:
-            text = "None\nNone\nNone"
-        self.account_num, self.bank, self.holder = text.split('\n')
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
