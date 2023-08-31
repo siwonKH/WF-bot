@@ -56,6 +56,11 @@ async def edit_channels():
     await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"{format(round(client.cost / len(members), 1), ',')}원/명")
 
 
+@client.tree.command(guild=TEST_GUILD, description="지연 시간")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{round(client.latency * 1000)}ms", ephemeral=True)
+
+
 @client.tree.command(guild=TEST_GUILD, description="청구서 날리기")
 async def bill(interaction: discord.Interaction, cost: int):
     manager_role = interaction.guild.get_role(MANAGER_ROLE)
