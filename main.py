@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 
 import views
 import modals
-from config import TEST_GUILD_ID, MANAGER_ROLE, MEMBER_ROLE, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL, MONTH_CHANNEL
+import embeds
+from config import TEST_GUILD_ID, MANAGER_ROLE, MEMBER_ROLE, TOTAL_CHANNEL, MEMBER_CHANNEL, BILL_CHANNEL, MONTH_CHANNEL, RECORD_CHANNEL
 
 TEST_GUILD = discord.Object(TEST_GUILD_ID)
 load_dotenv()
@@ -19,7 +20,7 @@ class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
         self.cost: int = 0
-        self.date: datetime = datetime.now()
+        self.date: datetime = None
         self.acc_bank = None
         self.acc_num = None
         self.acc_holder = None
@@ -44,17 +45,16 @@ client = MyClient()
 
 @tasks.loop(seconds=5)
 async def edit_channels():
-    if not client.need_channel_edit:
-        return
-    print("editing channels")
-    client.need_channel_edit = False
+    if client.need_channel_edit:
+        print("editing channels")
+        client.need_channel_edit = False
 
-    members = client.test_guild.get_role(MEMBER_ROLE).members
-    await client.test_guild.get_channel(MONTH_CHANNEL).edit(name=f"ChatGPT Plus [{client.date.month}월]")
-    await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"{format(client.cost, ',')}원")
-    await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원: {len(members)}")
-    await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"{format(round(client.cost / len(members), 1), ',')}원/명")
-    await asyncio.sleep(300)
+        members = client.test_guild.get_role(MEMBER_ROLE).members
+        await client.test_guild.get_channel(MONTH_CHANNEL).edit(name=f"ChatGPT Plus [{client.date.month}월]")
+        await client.test_guild.get_channel(TOTAL_CHANNEL).edit(name=f"{format(client.cost, ',')}원")
+        await client.test_guild.get_channel(MEMBER_CHANNEL).edit(name=f"인원: {len(members)}")
+        await client.test_guild.get_channel(BILL_CHANNEL).edit(name=f"{format(round(client.cost / len(members), 1), ',')}원/명")
+        await asyncio.sleep(300)
 
 
 @client.tree.command(guild=TEST_GUILD, description="지연 시간")
@@ -77,22 +77,34 @@ async def bill(interaction: discord.Interaction, cost: int):
 
     await interaction.response.defer()
     client.cost = cost
-    client.date = datetime.now()
     client.need_channel_edit = True
 
-    members = interaction.guild.get_role(MEMBER_ROLE).members
-    for member in members:
-        try:
-            print("Sending DM to:", member)
-            await member.send(
-                content="**이번달 ChatGPT Plus 요금 안내**",
-                view=views.BillLetter(client)
-            )
-        except discord.errors.HTTPException as e:
-            print("HTTP Error", e)
-        except AttributeError as e:
-            print("Attribute Error", e)
-        await asyncio.sleep(1)
+    if client.date.month != datetime.now().month:
+        client.date = datetime.now()
+        members = interaction.guild.get_role(MEMBER_ROLE).members
+        for member in members:
+            try:
+                print("Sending DM to:", member)
+                await member.send(
+                    content="**이번달 ChatGPT Plus 요금 안내**",
+                    view=views.BillLetter(client)
+                )
+            except discord.errors.HTTPException as e:
+                print("HTTP Error", e)
+            except AttributeError as e:
+                print("Attribute Error", e)
+            await asyncio.sleep(1)
+        record_message = ""
+    else:
+        client.date = datetime.now()
+        record_message = "수정됨"
+
+    member_count = len(client.test_guild.get_role(MEMBER_ROLE).members)
+    cost = client.cost
+    await interaction.guild.get_channel(RECORD_CHANNEL).send(
+        content=record_message,
+        embed=embeds.get_total_billing_embed(cost, member_count, client.date)
+    )
 
     await interaction.followup.send("**전송 완료**")
 
