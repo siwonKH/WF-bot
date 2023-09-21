@@ -10,7 +10,7 @@ def get_total_billing_embed(cost: int, member_cnt: int, date: datetime):
 
     embed = discord.Embed(
         title=f"ChatGPT Plus [{date.month}월]",
-        description=f"이번 달 요금: KRW {cost}\n인당 요금: KRW {total}",
+        description=f"이번 달 요금: KRW {subtotal}\n인원: {member_cnt}명\n인당 요금: KRW {total}",
         color=0xffffff,
         timestamp=date
     )
