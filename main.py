@@ -1,6 +1,6 @@
 import os
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands
@@ -20,7 +20,7 @@ class MyClient(discord.Client):
     def __init__(self) -> None:
         super().__init__(intents=discord.Intents.all())
         self.cost: int = 0
-        self.date: datetime = None
+        self.date: datetime = datetime.now() - timedelta(days=31)
         self.acc_bank = None
         self.acc_num = None
         self.acc_holder = None
