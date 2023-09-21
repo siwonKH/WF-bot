@@ -65,8 +65,8 @@ class MyClient(discord.Client):
 client = MyClient()
 
 
-async def init_bot():
-    client.need_channel_edit = False
+async def init_resend_process():
+    print('resend process init')
     client.resend_cnt = 0
     client.next_resend = datetime.now() + timedelta(days=3600)
 
@@ -95,22 +95,27 @@ async def edit_channels():
 @tasks.loop(seconds=30)
 async def send_dm_to_not_confirmed():
     if client.resend_cnt > 5:
-        await init_bot()
+        print('sent 5 times already.')
+        await init_resend_process()
         return
     if client.next_resend < datetime.now():
+        print('resending bill letter')
         client.resend_cnt += 1
         members = client.test_guild.get_role(MEMBER_ROLE).members
         for member in members:
             confirmed_role = client.test_guild.get_role(CONFIRMED_ROLE)
             if confirmed_role not in member.roles:
+                print('resent:', member.id)
                 await member.send(f"이번 달 요금이 확인되지 않았습니다.\n오류라고 판단된다면 관리자에게 문의하세요.")
         client.next_resend += timedelta(days=2)
+        print('waiting 2 days')
 
 
 @tasks.loop(seconds=30)
 async def send_alert_to_manager():
     now = datetime.now()
     if now > datetime(year=now.year, month=now.month, day=client.collect_day, hour=client.collect_hour):
+        print('alert to manager')
         managers = client.test_guild.get_role(MANAGER_ROLE).members
         for manager_dm in managers:
             manager_dm.send("**[알람] 서버에서 /bill 명령어를 사용해주세요.**\n(/alarm 명령어로 알림 시간을 변경할 수 있습니다.)")
@@ -162,6 +167,7 @@ async def bill(interaction: discord.Interaction, cost: int):
         content = ""
         response = f"다음 금액으로 청구서를 전송함. `{format(cost, ',')}`원"
     else:
+        print('saving edited bill letter')
         content = "수정됨"
         response = f"청구서의 금액을 수정함. `{format(cost, ',')}`원"
 
