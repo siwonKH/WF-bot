@@ -144,7 +144,6 @@ async def bill(interaction: discord.Interaction, cost: int):
     await interaction.response.defer()
     now = datetime.now()
     client.cost = cost
-    client.need_channel_edit = True
     client.resend_cnt = 0
     alert_date = now + timedelta(days=2)
     client.next_resend = datetime(year=alert_date.year, month=alert_date.month, day=alert_date.day, hour=ALERT_USERS_AT)
@@ -172,6 +171,7 @@ async def bill(interaction: discord.Interaction, cost: int):
         response = f"청구서의 금액을 수정함. `{format(cost, ',')}`원"
 
     client.date = now
+    client.need_channel_edit = True
     confirmed_role = interaction.guild.get_role(CONFIRMED_ROLE)
     for member in members:
         await member.remove_roles(confirmed_role)
